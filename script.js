@@ -28,8 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const benchmarks = {
         cpm: { 
             min: 10, max: 30, ideal: 18, 
-            // MODIFICADO AQUI 👇
-            msg: "É o custo para cada 1.000 impressões do seu anúncio." 
+            msg: "É o custo para cada 1.000 impressões do seu anúncio." // Já estava correto no seu último envio
         },
         ctr: { 
             min: 0.8, max: 2.5, ideal: 1.5, 
@@ -147,13 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // const benchmarkLiteralExplanation = benchmark.msg; // Esta linha é mantida, mas não será concatenada abaixo
+        // A variável benchmarkLiteralExplanation é definida a partir de benchmark.msg, mas não será concatenada ao feedback text.
+        // const benchmarkLiteralExplanation = benchmark.msg; // Não precisamos mais declarar explicitamente aqui se não for usada.
 
         if (isFinite(idealValue) && idealValue >= 0 && vendasNecessarias > 0) {
             const formattedVal = formatDisplayValue(value, unitText);
             const formattedIdeal = formatDisplayValue(idealValue, unitText, 2); 
             const roasStr = roasDesejado.toFixed(2).replace('.',',');
-            // MODIFICADO AQUI para consistência com o tooltip CPM 👇
+            // MODIFICADO para consistência com o tooltip CPM
             const metricTypeSimple = inputElement.id === 'cpm' ? 'custo para cada 1.000 impressões' : 'resultado atual';
 
             if (inputElement.id === 'cpm') { 
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     customMessage = `Importante: Seu ${metricTypeSimple} (${formattedVal}) está bem abaixo da meta (${formattedIdeal}) para o retorno de ${roasStr}x. `;
                 }
             }
-            // MODIFICADO AQUI 👇: Removido benchmarkLiteralExplanation
+            // MODIFICADO: Removido benchmarkLiteralExplanation
             feedbackElement.textContent = customMessage.trim();
         } else if (isFinite(value) && value >= 0) { 
             const formattedVal = formatDisplayValue(value, unitText);
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (!isFinite(idealValue) && vendasNecessarias > 0) { 
                 metaMsg = ` Não foi possível calcular uma meta para seu objetivo de retorno com os dados atuais das outras métricas do funil.`;
             }
-            // MODIFICADO AQUI 👇: Removido benchmarkLiteralExplanation
+            // MODIFICADO: Removido benchmarkLiteralExplanation
             feedbackElement.textContent = (`${customMessage} ${metaMsg}`).trim();
         } else { 
             let labelText = "Esta métrica";
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            // MODIFICADO AQUI 👇: Removido benchmarkLiteralExplanation
+            // MODIFICADO: Removido benchmarkLiteralExplanation
             feedbackElement.textContent = `O valor informado para "${labelText}" não é válido.`;
             feedbackColor = '#DC3545'; 
         }
@@ -260,9 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const FBsToClearOrError = [
                 { el: feedbackCpm, input: cpmInput, name: "CPM" }, 
                 { el: feedbackCtr, input: ctrInput, name: "CTR" }, 
-                { el: feedbackConnectRate, input: connectRateInput, name: "Taxa de Chegada na Página" }, 
-                { el: feedbackTaxaLpCheckout, input: taxaLpCheckoutInput, name: "Conversão da Página para Início de Compra" },
-                { el: feedbackTaxaCheckout, input: taxaCheckoutInput, name: "Conversão no Pagamento" }
+                { el: feedbackConnectRate, input: connectRateInput, name: "Connect Rate" }, // Nome atualizado conforme solicitação HTML
+                { el: feedbackTaxaLpCheckout, input: taxaLpCheckoutInput, name: "Taxa de conversão da Página para o checkout" }, // Nome atualizado
+                { el: feedbackTaxaCheckout, input: taxaCheckoutInput, name: "Taxa de conversão do checkout" } // Nome atualizado
             ];
 
             let generalError = "";
@@ -273,8 +273,16 @@ document.addEventListener('DOMContentLoaded', () => {
             FBsToClearOrError.forEach(item => {
                 if (item.el) {
                     const metricValue = parseFloat(item.input.value);
+                    // Usar o 'name' já atualizado se o input ID corresponder, ou tentar pegar do label se não
+                    let dynamicName = item.name; 
+                    const labelForInput = document.querySelector(`label[for="${item.input.id}"]`);
+                    if (labelForInput) {
+                        dynamicName = labelForInput.childNodes[0].nodeValue.trim().replace(/:$/, ''); // Pega o texto antes do tooltip e remove ':' se houver
+                    }
+
+
                     if (isNaN(metricValue) || metricValue < 0 || (item.input.id === 'cpm' && metricValue <= 0) ) {
-                        item.el.textContent = `Valor de "${item.name}" inválido. ${generalError || "Verifique também os Dados da Campanha."}`;
+                        item.el.textContent = `Valor de "${dynamicName}" inválido. ${generalError || "Verifique também os Dados da Campanha."}`;
                         item.el.style.color = '#DC3545';
                     } else if (generalError) { 
                          item.el.textContent = generalError + "Corrija os Dados da Campanha para ver o feedback da métrica.";
@@ -282,28 +290,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (isNaN(roasDesejadoVal) || roasDesejadoVal <= 0) {
                          item.el.textContent = "O Retorno Desejado deve ser maior que zero para um feedback mais preciso.";
                          item.el.style.color = '#FFC107'; 
+                    } else {
+                        // Limpa o feedback se os dados de campanha estiverem OK, ROAS OK, mas a métrica individual estiver OK
+                        // e o provideFeedback individual será chamado abaixo para dar o feedback específico.
+                        item.el.textContent = ''; 
                     }
-                     else {
-                       // Mantido o comportamento original aqui.
-                       // Se desejar limpar os feedbacks individuais quando os dados da campanha estão ok mas o ROAS não,
-                       // você precisaria adicionar item.el.textContent = ''; aqui, por exemplo.
-                       // Ou chamar provideFeedback para cada um, mas isso já é feito no bloco principal.
-                       // Por hora, a lógica do provideFeedback será chamada abaixo se não houver erro geral.
-                     }
                 }
             });
-            // Comentário original: Se houver erro geral nos dados da campanha ou ROAS, não prosseguir para o provideFeedback individual
-            // Adiciono uma verificação para que, se houver erro geral, os feedbacks das métricas do funil não sejam chamados com provideFeedback
-             if(generalError || (isNaN(roasDesejadoVal) || roasDesejadoVal <= 0 && (isNaN(ticketMedio) || ticketMedio <=0 || isNaN(investimentoAnuncios) || investimentoAnuncios <0 ) )) {
-                // Se os dados base da campanha estiverem ok, mas o ROAS desejado não,
-                // os feedbacks individuais podem ser chamados, mas sem cálculo de 'idealValue'
-                // a função provideFeedback já lida com isso.
-                // A condição acima previne que provideFeedback seja chamado se os dados de campanha base forem ruins.
-             } else if (ticketMedio > 0 && investimentoAnuncios >= 0 && (isNaN(roasDesejadoVal) || roasDesejadoVal > 0 )) {
-                 // Este bloco só será alcançado se os dados da campanha estiverem minimamente OK.
-             } else { // Se os dados base da campanha forem inválidos, e não apenas o ROAS desejado.
+            // Se houver erro geral ou ROAS desejado inválido, não chamar provideFeedback para cada métrica individualmente
+            // pois a mensagem de erro geral já foi definida.
+            if (generalError || isNaN(roasDesejadoVal) || roasDesejadoVal <= 0) {
                  return;
-             }
+            }
         }
 
         const impressoes = (investimentoAnuncios > 0 && cpm > 0) ? (investimentoAnuncios / cpm) * 1000 : 0;
@@ -330,24 +328,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         taxaConvLpVendaSpan.textContent = formatPercentage(taxaConvLpVenda);
 
-        // Chama provideFeedback para cada métrica do funil
-        if (ticketMedio > 0 && investimentoAnuncios >= 0 && (isNaN(roasDesejadoVal) || roasDesejadoVal > 0 )) { 
+        // Chama provideFeedback para cada métrica do funil somente se os dados base da campanha e ROAS desejado forem válidos
+        if (ticketMedio > 0 && investimentoAnuncios >= 0 && roasDesejadoVal > 0 ) { 
             provideFeedback(cpmInput, feedbackCpm, benchmarks.cpm);
             provideFeedback(ctrInput, feedbackCtr, benchmarks.ctr);
             provideFeedback(connectRateInput, feedbackConnectRate, benchmarks.connectRate);
             provideFeedback(taxaLpCheckoutInput, feedbackTaxaLpCheckout, benchmarks.taxaLpCheckout);
             provideFeedback(taxaCheckoutInput, feedbackTaxaCheckout, benchmarks.taxaCheckout);
-        } else { 
-            const baseMessage = "Preencha os Dados da Campanha (Preço Médio > 0, Investimento >=0) ";
-            const roasMessage = (isNaN(roasDesejadoVal) || roasDesejadoVal <= 0) ? "e o Retorno Desejado (>0) " : "";
-            const finalMessage = baseMessage + roasMessage + "para um feedback mais detalhado das métricas do funil.";
+        } else if (ticketMedio > 0 && investimentoAnuncios >= 0 && (isNaN(roasDesejadoVal) || roasDesejadoVal <= 0)) {
+            // Se os dados da campanha estiverem OK, mas o ROAS desejado não, limpar os feedbacks individuais ou mostrar mensagem genérica
+            const initialFeedbackMessage = "Informe um Retorno Desejado (>0) para feedback detalhado das métricas do funil.";
             [feedbackCpm, feedbackCtr, feedbackConnectRate, feedbackTaxaLpCheckout, feedbackTaxaCheckout].forEach(fb => {
                 if (fb) {
-                    fb.textContent = finalMessage;
-                    fb.style.color = '#FFC107'; 
+                    fb.textContent = initialFeedbackMessage;
+                    fb.style.color = '#FFC107';
                 }
             });
         }
+         // Se nem ticketMedio nem investimentoAnuncios forem válidos, os erros já são tratados no início da função calculateMetrics
     }
 
     const allInputs = document.querySelectorAll('.input-section input[type="number"], .input-group input[type="number"]');
