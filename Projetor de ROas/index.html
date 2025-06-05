@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projetor de ROAS Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css"> </head>
+<body>
+    <div class="calculator-logo-container">
+        <img src="https://storage.googleapis.com/project-ai-hackathon.appspot.com/api-project-1043999952264/Trinity-Concept-001-01-1.png" alt="Logo Trinity" 
+        onerror="this.src='https://placehold.co/320x80/F8F9FA/003B71?text=TRINITY+Logo'; this.onerror=null;">
+    </div>
+    <div class="container">
+        <h1>Projetor de ROAS</h1> 
+
+        <div class="section input-section">
+            <h2>Dados da Campanha e Objetivo</h2>
+            <div class="input-group">
+                <label for="ticketMedio">Preço Médio do Produto/Serviço (R$):</label>
+                <div class="input-wrapper"> 
+                     <span class="unit-prefix">R$</span>
+                    <input type="number" id="ticketMedio" value="100" min="0.01" step="0.01">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="investimentoAnuncios">Total a Investir em Anúncios (R$):</label>
+                 <div class="input-wrapper">
+                    <span class="unit-prefix">R$</span>
+                    <input type="number" id="investimentoAnuncios" value="1000" min="0.01" step="0.01">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="roasDesejado">Retorno Desejado sobre o Investimento 
+                    <span class="tooltip-container">
+                        <span class="tooltip-trigger">!</span>
+                        <span class="tooltip-bubble">É a meta de quanto você quer faturar para cada real investido em anúncios. Ex: 3 significa R$3 de receita para cada R$1 gasto.</span>
+                    </span>
+                </label>
+                <div class="input-wrapper no-unit"> 
+                    <input type="number" id="roasDesejado" value="3" min="0.01" step="0.01">
+                </div>
+            </div>
+        </div>
+
+        <div class="section input-section">
+            <h2>Métricas do Funil de Vendas (Simule aqui)</h2>
+            <div class="input-group">
+                <label for="cpm">CPM (Custo para o anúncio ser visto 1000 vezes - R$): 
+                    <span class="tooltip-container">
+                        <span class="tooltip-trigger">!</span>
+                        <span class="tooltip-bubble">É o custo para cada 1.000 visualizações do seu anúncio.</span>
+                    </span>
+                </label>
+                <div class="input-wrapper">
+                    <span class="unit-prefix">R$</span>
+                    <input type="number" id="cpm" value="15" min="0.01" step="0.01">
+                </div>
+                <span class="feedback-text" id="feedbackCpm"></span>
+            </div>
+            <div class="input-group">
+                <label for="ctr">CTR (Taxa de Cliques nos anúncios - %):
+                    <span class="tooltip-container">
+                        <span class="tooltip-trigger">!</span>
+                        <span class="tooltip-bubble">Percentual de pessoas que clicam no seu anúncio após visualizá-lo.</span>
+                    </span>
+                </label>
+                <div class="input-wrapper">
+                    <input type="number" id="ctr" value="1.2" min="0.01" max="100" step="0.01">
+                    <span class="unit-suffix">%</span>
+                </div>
+                <span class="feedback-text" id="feedbackCtr"></span>
+            </div>
+            <div class="input-group">
+                <label for="connectRate">Taxa de Chegada na Página (após o clique - %):
+                    <span class="tooltip-container">
+                        <span class="tooltip-trigger">!</span>
+                        <span class="tooltip-bubble">Percentual de cliques que resultaram no carregamento efetivo da sua página de destino (LP).</span>
+                    </span>
+                </label>
+                <div class="input-wrapper">
+                    <input type="number" id="connectRate" value="90" min="0.01" max="100" step="0.01">
+                    <span class="unit-suffix">%</span>
+                </div>
+                <span class="feedback-text" id="feedbackConnectRate"></span>
+            </div>
+            <div class="input-group">
+                <label for="taxaLpCheckout">Conversão da Página para Início de Compra (%):
+                    <span class="tooltip-container">
+                        <span class="tooltip-trigger">!</span>
+                        <span class="tooltip-bubble">Percentual de visitantes da sua página que iniciam o processo de checkout (compra).</span>
+                    </span>
+                </label>
+                <div class="input-wrapper">
+                    <input type="number" id="taxaLpCheckout" value="5" min="0.01" max="100" step="0.01">
+                    <span class="unit-suffix">%</span>
+                </div>
+                <span class="feedback-text" id="feedbackTaxaLpCheckout"></span>
+            </div>
+            <div class="input-group">
+                <label for="taxaCheckout">Conversão no Pagamento (compra finalizada - %):
+                    <span class="tooltip-container">
+                        <span class="tooltip-trigger">!</span>
+                        <span class="tooltip-bubble">Percentual de pessoas que iniciaram o checkout e de fato finalizaram a compra.</span>
+                    </span>
+                </label>
+                <div class="input-wrapper">
+                    <input type="number" id="taxaCheckout" value="60" min="0.01" max="100" step="0.01">
+                    <span class="unit-suffix">%</span>
+                </div>
+                <span class="feedback-text" id="feedbackTaxaCheckout"></span>
+            </div>
+        </div>
+
+        <div class="prominent-result-label">Retorno Sobre o Investimento em Anúncios (ROAS):</div>
+        <div class="roas-result-wrapper">
+            <span class="roas-value" id="roasAlcancado">0,00x</span>
+        </div>
+
+        <div class="section results-section">
+            <h2>Resultados Estimados da Campanha</h2>
+            <p>Seu anúncio poderá ser visto (Impressões): <span><span id="impressoes">0</span><span class="unit-text"> vezes</span></span></p>
+            <p>Pessoas que podem clicar no anúncio (Cliques): <span><span id="cliques">0</span></span></p>
+            <p>Custo por cada Clique no anúncio (CPC): <span><span id="cpc">R$ 0,00</span></span></p>
+            <p>Visitas estimadas na sua Página (LP): <span><span id="visitasLp">0</span></span></p>
+            <p>Pessoas que podem iniciar a compra (Checkouts): <span><span id="iniciosCheckout">0</span></span></p>
+            <p>Vendas que podem ser realizadas: <span><span id="vendasFinalizadas">0</span></span></p>
+            <p>Custo para realizar cada Venda (CPA): <span><span id="cpa">R$ 0,00</span></span></p>
+            <p>Receita Total estimada com as Vendas: <span><span id="receitaTotal">R$ 0,00</span></span></p>
+        </div>
+        
+        <div class="section results-section">
+            <h2>Outras Métricas Importantes</h2>
+            <p>
+                <span class="metric-label">Taxa de Conversão da LP
+                    </span>
+                <span><span id="taxaConvLpVenda">0%</span></span>
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script> </body>
+</html>
