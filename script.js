@@ -28,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const benchmarks = {
         cpm: { 
             min: 10, max: 30, ideal: 18, 
-            msg: "É o custo para cada 1.000 visualizações do seu anúncio." 
+            // MODIFICADO AQUI 👇
+            msg: "É o custo para cada 1.000 impressões do seu anúncio." 
         },
         ctr: { 
             min: 0.8, max: 2.5, ideal: 1.5, 
@@ -73,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return num.toFixed(precision).replace('.', ',');
     }
 
+    // --- INÍCIO DA FUNÇÃO provideFeedback MODIFICADA ---
     function provideFeedback(inputElement, feedbackElement, benchmark) {
         const value = parseFloat(inputElement.value);
         const ticketMedio = parseFloat(ticketMedioInput.value);
@@ -129,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cliques = impressoes * currentCtrValue;
                     const visitasLp = cliques * currentConnectRateValue;
                     if (visitasLp > 0 && currentTaxaCheckoutValue > 0) {
-                         idealValue = (vendasNecessarias / (visitasLp * currentTaxaCheckoutValue)) * 100;
+                        idealValue = (vendasNecessarias / (visitasLp * currentTaxaCheckoutValue)) * 100;
                     }
                 }
             } else if (inputElement.id === 'taxaCheckout') {
@@ -145,13 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        const benchmarkLiteralExplanation = benchmark.msg; 
+        // const benchmarkLiteralExplanation = benchmark.msg; // Esta linha é mantida, mas não será concatenada abaixo
 
         if (isFinite(idealValue) && idealValue >= 0 && vendasNecessarias > 0) {
             const formattedVal = formatDisplayValue(value, unitText);
             const formattedIdeal = formatDisplayValue(idealValue, unitText, 2); 
             const roasStr = roasDesejado.toFixed(2).replace('.',',');
-            const metricTypeSimple = inputElement.id === 'cpm' ? 'custo para mostrar o anúncio 1.000 vezes' : 'resultado atual';
+            // MODIFICADO AQUI para consistência com o tooltip CPM 👇
+            const metricTypeSimple = inputElement.id === 'cpm' ? 'custo para cada 1.000 impressões' : 'resultado atual';
 
             if (inputElement.id === 'cpm') { 
                 if (value <= idealValue * 1.05) { 
@@ -176,7 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     customMessage = `Importante: Seu ${metricTypeSimple} (${formattedVal}) está bem abaixo da meta (${formattedIdeal}) para o retorno de ${roasStr}x. `;
                 }
             }
-             feedbackElement.textContent = customMessage + benchmarkLiteralExplanation;
+            // MODIFICADO AQUI 👇: Removido benchmarkLiteralExplanation
+            feedbackElement.textContent = customMessage.trim();
         } else if (isFinite(value) && value >= 0) { 
             const formattedVal = formatDisplayValue(value, unitText);
             if (value < benchmark.min) {
@@ -186,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 `Seu resultado (${formattedVal}) está abaixo da média de mercado (${formatDisplayValue(benchmark.min, unitText)}). `;
             } else if (value > benchmark.max) {
                 feedbackColor = inputElement.id === 'cpm' ? '#FFC107' : '#28A745'; 
-                 customMessage = inputElement.id === 'cpm' ?
+                customMessage = inputElement.id === 'cpm' ?
                                 `Seu Custo por Mil Impressões (${formattedVal}) está acima da média de mercado (${formatDisplayValue(benchmark.max, unitText)}). ` :
                                 `Seu resultado (${formattedVal}) está acima da média de mercado (${formatDisplayValue(benchmark.max, unitText)}). `;
             } else { 
@@ -196,11 +200,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let metaMsg = "";
             if (vendasNecessarias <= 0 && roasDesejado > 0) { 
-                 metaMsg = ` Não conseguimos calcular uma meta precisa para seu objetivo de retorno com os dados de campanha fornecidos.`;
+                metaMsg = ` Não conseguimos calcular uma meta precisa para seu objetivo de retorno com os dados de campanha fornecidos.`;
             } else if (!isFinite(idealValue) && vendasNecessarias > 0) { 
-                 metaMsg = ` Não foi possível calcular uma meta para seu objetivo de retorno com os dados atuais das outras métricas do funil.`;
+                metaMsg = ` Não foi possível calcular uma meta para seu objetivo de retorno com os dados atuais das outras métricas do funil.`;
             }
-            feedbackElement.textContent = `${customMessage} ${metaMsg} ${benchmarkLiteralExplanation}`;
+            // MODIFICADO AQUI 👇: Removido benchmarkLiteralExplanation
+            feedbackElement.textContent = (`${customMessage} ${metaMsg}`).trim();
         } else { 
             let labelText = "Esta métrica";
             const labelElement = document.querySelector(`label[for="${inputElement.id}"]`); 
@@ -215,11 +220,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            feedbackElement.textContent = `O valor informado para "${labelText}" não é válido. ${benchmarkLiteralExplanation}`;
+            // MODIFICADO AQUI 👇: Removido benchmarkLiteralExplanation
+            feedbackElement.textContent = `O valor informado para "${labelText}" não é válido.`;
             feedbackColor = '#DC3545'; 
         }
         feedbackElement.style.color = feedbackColor;
     }
+    // --- FIM DA FUNÇÃO provideFeedback MODIFICADA ---
 
     function calculateMetrics() {
         const ticketMedio = parseFloat(ticketMedioInput.value);
@@ -277,10 +284,26 @@ document.addEventListener('DOMContentLoaded', () => {
                          item.el.style.color = '#FFC107'; 
                     }
                      else {
+                       // Mantido o comportamento original aqui.
+                       // Se desejar limpar os feedbacks individuais quando os dados da campanha estão ok mas o ROAS não,
+                       // você precisaria adicionar item.el.textContent = ''; aqui, por exemplo.
+                       // Ou chamar provideFeedback para cada um, mas isso já é feito no bloco principal.
+                       // Por hora, a lógica do provideFeedback será chamada abaixo se não houver erro geral.
                      }
                 }
             });
-            return; 
+            // Comentário original: Se houver erro geral nos dados da campanha ou ROAS, não prosseguir para o provideFeedback individual
+            // Adiciono uma verificação para que, se houver erro geral, os feedbacks das métricas do funil não sejam chamados com provideFeedback
+             if(generalError || (isNaN(roasDesejadoVal) || roasDesejadoVal <= 0 && (isNaN(ticketMedio) || ticketMedio <=0 || isNaN(investimentoAnuncios) || investimentoAnuncios <0 ) )) {
+                // Se os dados base da campanha estiverem ok, mas o ROAS desejado não,
+                // os feedbacks individuais podem ser chamados, mas sem cálculo de 'idealValue'
+                // a função provideFeedback já lida com isso.
+                // A condição acima previne que provideFeedback seja chamado se os dados de campanha base forem ruins.
+             } else if (ticketMedio > 0 && investimentoAnuncios >= 0 && (isNaN(roasDesejadoVal) || roasDesejadoVal > 0 )) {
+                 // Este bloco só será alcançado se os dados da campanha estiverem minimamente OK.
+             } else { // Se os dados base da campanha forem inválidos, e não apenas o ROAS desejado.
+                 return;
+             }
         }
 
         const impressoes = (investimentoAnuncios > 0 && cpm > 0) ? (investimentoAnuncios / cpm) * 1000 : 0;
@@ -307,23 +330,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         taxaConvLpVendaSpan.textContent = formatPercentage(taxaConvLpVenda);
 
-         if (ticketMedio > 0 && investimentoAnuncios >= 0 && (isNaN(roasDesejadoVal) || roasDesejadoVal > 0 )) { 
+        // Chama provideFeedback para cada métrica do funil
+        if (ticketMedio > 0 && investimentoAnuncios >= 0 && (isNaN(roasDesejadoVal) || roasDesejadoVal > 0 )) { 
             provideFeedback(cpmInput, feedbackCpm, benchmarks.cpm);
             provideFeedback(ctrInput, feedbackCtr, benchmarks.ctr);
             provideFeedback(connectRateInput, feedbackConnectRate, benchmarks.connectRate);
             provideFeedback(taxaLpCheckoutInput, feedbackTaxaLpCheckout, benchmarks.taxaLpCheckout);
             provideFeedback(taxaCheckoutInput, feedbackTaxaCheckout, benchmarks.taxaCheckout);
-         } else { 
-             const baseMessage = "Preencha os Dados da Campanha (Preço Médio > 0, Investimento >=0) ";
-             const roasMessage = (isNaN(roasDesejadoVal) || roasDesejadoVal <= 0) ? "e o Retorno Desejado (>0) " : "";
-             const finalMessage = baseMessage + roasMessage + "para um feedback mais detalhado das métricas do funil.";
-             [feedbackCpm, feedbackCtr, feedbackConnectRate, feedbackTaxaLpCheckout, feedbackTaxaCheckout].forEach(fb => {
-                 if (fb) {
-                     fb.textContent = finalMessage;
-                     fb.style.color = '#FFC107'; 
-                 }
-             });
-         }
+        } else { 
+            const baseMessage = "Preencha os Dados da Campanha (Preço Médio > 0, Investimento >=0) ";
+            const roasMessage = (isNaN(roasDesejadoVal) || roasDesejadoVal <= 0) ? "e o Retorno Desejado (>0) " : "";
+            const finalMessage = baseMessage + roasMessage + "para um feedback mais detalhado das métricas do funil.";
+            [feedbackCpm, feedbackCtr, feedbackConnectRate, feedbackTaxaLpCheckout, feedbackTaxaCheckout].forEach(fb => {
+                if (fb) {
+                    fb.textContent = finalMessage;
+                    fb.style.color = '#FFC107'; 
+                }
+            });
+        }
     }
 
     const allInputs = document.querySelectorAll('.input-section input[type="number"], .input-group input[type="number"]');
